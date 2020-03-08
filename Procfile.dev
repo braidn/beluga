@@ -1,0 +1,2 @@
+build: yarn start
+server: node ./server/index.js

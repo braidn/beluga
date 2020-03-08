@@ -1,44 +1,39 @@
-const result = require('dotenv').config({ path: 'config.env' });
-const express = require('express');
-const session = require('express-session');
-const helmet = require('helmet');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
-const path = require('path');
+const result = require("dotenv").config({ path: "config.env" });
+const session = require("cookie-session");
+const helmet = require("helmet");
+const cookie = require("cookies");
+const bodyParser = require("body-parser");
+const path = require("path");
 const stripe = require("stripe")(process.env.STRIPE_KEY);
-const app = module.exports = express();
-
-app.use(helmet());
-app.use(cookieParser());
+const app = require("./app.js");
+console.log(app);
 
 var sess = {
   secret: process.env.SESSION_SECRET,
-  cookie: {
+  options: {
     maxAge: 24 * 60 * 60 * 1000,
-    secure: false
-  },
-  resave: false,
-  saveUninitialized: true,
-}
+    secure: false,
+    overwrite: false
+  }
+};
 
-if (app.get('env') === 'production') {
-  app.set('trust proxy', 1);
+if (process.env === "production") {
+  app.set("trust proxy", 1);
   sess.cookie.secure = true;
 }
 
-app.use(session(sess))
-app.use(bodyParser.json());
+app.use(helmet(), cookie(), session(sess), bodyParser.json());
 
 if (result.error) throw result.error;
-require(__dirname + '/product.js');
-require(__dirname + '/orders.js');
-require(__dirname + '/admin.js');
-require(__dirname + '/config.js');
+require(__dirname + "/product.js");
+require(__dirname + "/orders.js");
+require(__dirname + "/admin.js");
+require(__dirname + "/config.js");
 
-app.use(express.static(path.join(__dirname, '..', 'build')));
+app.use(path.join(__dirname, "..", "build"));
 
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '..', 'build', 'index.html'));
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "..", "build", "index.html"));
 });
 
 app.listen(5000, function() {
