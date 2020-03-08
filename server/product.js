@@ -1,28 +1,25 @@
-const app = require('./index.js');
+const app = require("./app.js");
 const rimraf = require("rimraf");
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 
-app.get('/product-info/:id', function(req, res) {
-  stripe.skus.list({ product: req.params.id },
-    function(err, product) {
-      err ? res.status(500).send(err) : res.json(product);
-    });
+app.get("/product-info/:id", function(req, res) {
+  stripe.skus.list({ product: req.params.id }, function(err, product) {
+    err ? res.status(500).send(err) : res.json(product);
+  });
 });
 
-app.get('/product-info/', function(req, res) {
-  stripe.skus.list(
-    function(err, skus) {
-      err ? res.status(500).send(err) : res.json(skus.data);
-    });
+app.get("/product-info/", function(req, res) {
+  stripe.skus.list(function(err, skus) {
+    err ? res.status(500).send(err) : res.json(skus.data);
+  });
 });
 
 app.post("/create-product", function(req, res) {
   const product = {
     name: req.body.name,
-    type: 'good'
-  }
-  if (req.body.attributes)
-    product["attributes"] = [req.body.attributes];
+    type: "good"
+  };
+  if (req.body.attributes) product["attributes"] = [req.body.attributes];
 
   stripe.products.create(product, function(err, result) {
     err ? res.status(500).send(err) : res.json(result);
@@ -50,17 +47,16 @@ app.post("/delete-product/:id", function(req, res) {
 app.post("/create-sku", function(req, res) {
   let sku = {
     price: +req.body.price,
-    currency: 'usd',
+    currency: "usd",
     inventory: {
       type: req.body.inventory.type
     },
     product: req.body.product_id
-  }
+  };
   if (req.body.inventory.type === "finite")
     sku.inventory["quantity"] = +req.body.inventory.quantity;
 
-  if (req.body.attributes)
-    sku["attributes"] = req.body.attributes;
+  if (req.body.attributes) sku["attributes"] = req.body.attributes;
 
   stripe.skus.create(sku, function(err, confirmation) {
     err ? res.status(500).send(err) : res.json(confirmation);
@@ -71,14 +67,12 @@ app.post("/update-sku/:id", function(req, res) {
   let sku = {
     price: req.body.price
   };
-  if (req.body.inventory)
-    sku["inventory"] = { type: req.body.inventory.type }
+  if (req.body.inventory) sku["inventory"] = { type: req.body.inventory.type };
 
   if (req.body.inventory && req.body.inventory.type === "finite")
     sku.inventory["quantity"] = +req.body.inventory.quantity;
 
-  if (req.body.attributes)
-    sku["attributes"] = req.body.attributes;
+  if (req.body.attributes) sku["attributes"] = req.body.attributes;
 
   stripe.skus.update(req.params.id, sku, function(err, success) {
     err ? res.status(500).send(err) : res.json({ success: true });
